@@ -1,0 +1,111 @@
+﻿<UserControl x:Class="ThermalFlowAnalysis.Chart"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:toms="urn:TomsToolbox"
+             xmlns:local="clr-namespace:ThermalFlowAnalysis"
+             mc:Ignorable="d" d:DesignHeight="450" d:DesignWidth="800">
+  <Grid DataContext="{Binding RelativeSource={RelativeSource AncestorType=UserControl}}">
+    <!-- Define the four quadrants -->
+    <Grid.ColumnDefinitions>
+      <ColumnDefinition Width="Auto" MinWidth="48" />
+      <ColumnDefinition Width="{Binding Q3.Width, Converter={toms:StarSizeConverter}}" />
+      <ColumnDefinition Width="{Binding Q1.Width, Converter={toms:StarSizeConverter}}" />
+    </Grid.ColumnDefinitions>
+    <Grid.RowDefinitions>
+      <RowDefinition Height="{Binding Q1.Height, Converter={toms:StarSizeConverter}}" />
+      <RowDefinition Height="{Binding Q3.Height, Converter={toms:StarSizeConverter}}" />
+      <RowDefinition Height="Auto" MinHeight="24" />
+    </Grid.RowDefinitions>
+    <!-- Draw the two axes -->
+    <Border Grid.Row="0" Grid.Column="2" BorderBrush="Gray" BorderThickness="1,0,0,1" />
+    <Border Grid.Row="1" Grid.Column="1" BorderBrush="Gray" BorderThickness="0,1,1,0" Margin="0,-1,-1,0" />
+    <!-- Label the axes -->
+    <Grid Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Margin="4,2">
+      <TextBlock Text="{Binding BoundingRect.Bottom, FallbackValue=Top, StringFormat=F1}"
+                 HorizontalAlignment="Right" />
+      <TextBlock Text="{Binding Origin.Y, FallbackValue=0, StringFormat=F1}" HorizontalAlignment="Right"
+                 VerticalAlignment="Bottom" />
+    </Grid>
+    <Grid Grid.Row="1" Grid.RowSpan="2" Grid.Column="2" Margin="4">
+      <TextBlock Text="{Binding Origin.X, FallbackValue=Left, StringFormat=F1}" HorizontalAlignment="Left" />
+      <TextBlock Text="{Binding BoundingRect.Right, FallbackValue=Right, StringFormat=F1}"
+                 HorizontalAlignment="Right" />
+    </Grid>
+    <Grid Grid.Row="1" Grid.ColumnSpan="2" Grid.Column="0" Margin="4,2">
+      <TextBlock Text="{Binding BoundingRect.Top, FallbackValue=Bottom, StringFormat=F1}"
+                 HorizontalAlignment="Right" VerticalAlignment="Bottom" />
+    </Grid>
+    <!-- Define the chart -->
+    <Grid Grid.Row="0" Grid.Column="1" Grid.RowSpan="2" Grid.ColumnSpan="2">
+      <!-- Invert Y axis to get a math coordinate system -->
+      <FrameworkElement.LayoutTransform>
+        <ScaleTransform ScaleX="1" ScaleY="-1" />
+      </FrameworkElement.LayoutTransform>
+      <!-- Define our world coordinates that scales into Q1 -->
+      <Viewbox Stretch="Fill">
+        <Grid x:Name="World"
+              Width="{Binding BoundingRect.Width}"
+              Height="{Binding BoundingRect.Height}">
+          <Grid.RenderTransform>
+            <TranslateTransform
+              X="{Binding BoundingRect.Left, Converter={x:Static toms:BinaryOperationConverter.Multiply}, ConverterParameter=-1}"
+              Y="{Binding BoundingRect.Top, Converter={x:Static toms:BinaryOperationConverter.Multiply}, ConverterParameter=-1}" />
+          </Grid.RenderTransform>
+        </Grid>
+      </Viewbox>
+      <Grid>
+        <!-- Draw all lines in world coordinates -->
+        <ItemsControl ItemsSource="{Binding Lines}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate>
+              <toms:ViewportCanvas World="{Binding ElementName=World}">
+                <Polyline x:Name="PolyLine"
+                          MinWidth="1"
+                          MinHeight="1"
+                          toms:Polyline.DataPoints="{Binding Points}"
+                          Stroke="{Binding Color}"
+                          StrokeThickness="1" />
+              </toms:ViewportCanvas>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+          <ItemsControl.ItemsPanel>
+            <ItemsPanelTemplate>
+              <Grid />
+            </ItemsPanelTemplate>
+          </ItemsControl.ItemsPanel>
+        </ItemsControl>
+        <!-- Draw all points in world coordinates -->
+        <ItemsControl ItemsSource="{Binding Points}">
+          <ItemsControl.ItemsPanel>
+            <ItemsPanelTemplate>
+              <toms:ViewportCanvas World="{Binding ElementName=World}" />
+            </ItemsPanelTemplate>
+          </ItemsControl.ItemsPanel>
+          <ItemsControl.ItemContainerStyle>
+            <Style TargetType="ContentPresenter">
+              <Setter Property="toms:CanvasAnchor.TopLeft" Value="{Binding (local:DataPoint.Position)}" />
+            </Style>
+          </ItemsControl.ItemContainerStyle>
+          <ItemsControl.ItemTemplate>
+            <DataTemplate>
+              <StackPanel>
+                <FrameworkElement.RenderTransform>
+                  <TransformGroup>
+                    <!-- Center is the center of the ellipse-->
+                    <TranslateTransform X="-5" Y="-5" />
+                    <!-- Reverse the Y axis inversion -->
+                    <ScaleTransform ScaleY="-1" />
+                  </TransformGroup>
+                </FrameworkElement.RenderTransform>
+                <Ellipse Height="10" Width="10" Fill="{Binding Color}" HorizontalAlignment="Left" />
+                <TextBlock Text="{Binding Label}" />
+              </StackPanel>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </Grid>
+    </Grid>
+  </Grid>
+</UserControl>

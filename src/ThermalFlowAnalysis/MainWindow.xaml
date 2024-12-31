@@ -1,0 +1,44 @@
+﻿<Window x:Class="ThermalFlowAnalysis.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:thermalFlowAnalysis="clr-namespace:ThermalFlowAnalysis"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="450" Width="800">
+  <Window.DataContext>
+    <thermalFlowAnalysis:MainViewModel />
+  </Window.DataContext>
+  <DockPanel>
+    <ToolBar DockPanel.Dock="Top">
+      <Button Content="Load" Command="{Binding LoadFileCommand}"/>
+    </ToolBar>
+    <Grid>
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="250" />
+        <ColumnDefinition Width="Auto"/>
+        <ColumnDefinition Width="*"/>
+      </Grid.ColumnDefinitions>
+
+      <GridSplitter Grid.Column="1" VerticalAlignment="Stretch" HorizontalAlignment="Center"/>
+
+      <DataGrid Grid.Column="0" 
+                ItemsSource="{Binding Days}"
+                AutoGenerateColumns="False"
+                SelectionMode="Single" 
+                SelectedItem="{Binding SelectedDay}"
+                IsReadOnly="True">
+        <DataGrid.Columns>
+          <DataGridTextColumn Binding="{Binding Date, StringFormat='yyyy-MM-dd'}" Header="Date" />
+          <DataGridTextColumn Binding="{Binding MinTemp}" Header="Min."/>
+          <DataGridTextColumn Binding="{Binding MaxTemp}" Header="Max."/>
+          <DataGridTextColumn Binding="{Binding AverageTemp, StringFormat='F2'}" Header="Avg."/>
+        </DataGrid.Columns>
+      </DataGrid>
+
+      <thermalFlowAnalysis:Chart Grid.Column="2"
+                                 Lines="{Binding SelectedDayLines}"/>
+
+    </Grid>
+  </DockPanel>
+</Window>
